@@ -14,6 +14,7 @@ SOURCE = ROOT / "data" / "incidents.csv"
 MAPPING = ROOT / "mapping" / "interoperability-map-v1.json"
 SCHEMA = ROOT / "schema" / "interoperability-export.schema.json"
 SCRIPT = ROOT / "scripts" / "export_interoperability.py"
+VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
 def source_rows():
@@ -75,14 +76,16 @@ def test_export_is_byte_deterministic_and_hash_matches(tmp_path):
     assert second_sha.read_text(encoding="utf-8").strip() == f"{digest}  second.json"
 
 
-def test_export_validates_against_schema_and_covers_seed(tmp_path):
+def test_export_validates_against_schema_and_covers_current_release(tmp_path):
     output, _ = run_export(tmp_path)
     payload = json.loads(output.read_text(encoding="utf-8"))
     schema = json.loads(SCHEMA.read_text(encoding="utf-8"))
     jsonschema.Draft202012Validator(schema).validate(payload)
 
     rows = sorted(source_rows(), key=lambda row: row["incident_id"])
-    assert payload["source_dataset"]["record_count"] == len(rows) == 17
+    assert VERSION == "0.2.0"
+    assert payload["source_dataset"]["version"] == VERSION
+    assert payload["source_dataset"]["record_count"] == len(rows) == 19
     assert [record["aaio"]["incident_id"] for record in payload["records"]] == [
         row["incident_id"] for row in rows
     ]
@@ -105,22 +108,31 @@ def test_export_preserves_evidence_confidence_and_source_calibration(tmp_path):
         assert provenance["sources"][1]["url"] == source["source_2_url"]
 
 
-def test_aiid_alignment_is_explicitly_non_inventive(tmp_path):
+def test_aiid_alignment_preserves_existing_ids_without_inventing_new_ones(tmp_path):
     output, _ = run_export(tmp_path)
     payload = json.loads(output.read_text(encoding="utf-8"))
     rows = {row["incident_id"]: row for row in source_rows()}
 
+    no_upstream_id = set()
     for record in payload["records"]:
         incident_id = record["aaio"]["incident_id"]
         source = rows[incident_id]
         aiid = record["alignments"]["aiid_core"]
-        assert aiid["existing_incident"]["incident_id"] == int(source["aiid_id"])
-        assert aiid["existing_incident"]["url"] == source["aiid_url"]
-        assert aiid["existing_incident"]["status"] == "cross_reference_only"
+
+        if source["aiid_id"].strip():
+            assert aiid["existing_incident"]["incident_id"] == int(source["aiid_id"])
+            assert aiid["existing_incident"]["url"] == source["aiid_url"]
+            assert aiid["existing_incident"]["status"] == "cross_reference_only"
+        else:
+            no_upstream_id.add(incident_id)
+            assert aiid["existing_incident"] is None
+
         assert aiid["entities"]["developer"] == {"value": None, "status": "unmapped"}
         assert aiid["entities"]["deployer"] == {"value": None, "status": "unmapped"}
         assert aiid["taxonomy_annotations"]["value"] is None
         assert aiid["taxonomy_annotations"]["status"] == "unmapped"
+
+    assert {"AAIO-0018", "AAIO-0019"} <= no_upstream_id
 
 
 def test_oecd_alignment_flags_non_equivalent_fields_instead_of_guessing(tmp_path):
