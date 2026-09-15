@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Build a deterministic AAIO interoperability export.
+"""Build a deterministic AAIO semantic interoperability export.
 
-The output is a semantic alignment layer for AIID and the OECD common reporting
-framework. It is intentionally not an official submission or ingest schema for
-either external system.
+The export preserves AAIO provenance while aligning fields to AIID core concepts
+and the OECD common reporting framework. It is not an official ingest schema or
+an endorsement by either external project.
 """
 from __future__ import annotations
 
@@ -19,8 +19,9 @@ DEFAULT_SOURCE = ROOT / "data" / "incidents.csv"
 DEFAULT_MAPPING = ROOT / "mapping" / "interoperability-map-v1.json"
 DEFAULT_OUTPUT = ROOT / "exports" / "aaio-interoperability-v1.json"
 DEFAULT_SHA_OUTPUT = ROOT / "exports" / "aaio-interoperability-v1.sha256"
+VERSION_FILE = ROOT / "VERSION"
 EXPORT_SCHEMA_VERSION = "1.0.0"
-SOURCE_DATASET_VERSION = "0.1.0"
+
 NUMERIC_FIELDS = {
     "magnitude",
     "scale",
@@ -28,6 +29,7 @@ NUMERIC_FIELDS = {
     "irreversibility",
     "severity_score",
 }
+
 REQUIRED_SOURCE_FIELDS = {
     "incident_id",
     "title",
@@ -72,6 +74,10 @@ def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def dataset_version() -> str:
+    return VERSION_FILE.read_text(encoding="utf-8").strip()
+
+
 def split_pipe(value: str) -> list[str]:
     return [part.strip() for part in value.split("|") if part.strip()]
 
@@ -86,37 +92,36 @@ def typed_row(row: dict[str, str]) -> dict[str, Any]:
 def read_rows(source: Path) -> list[dict[str, Any]]:
     with source.open(encoding="utf-8", newline="") as handle:
         reader = csv.DictReader(handle)
-        fields = set(reader.fieldnames or [])
-        missing = sorted(REQUIRED_SOURCE_FIELDS - fields)
+        missing = sorted(REQUIRED_SOURCE_FIELDS - set(reader.fieldnames or []))
         if missing:
-            raise ValueError(f"Source dataset is missing required fields: {', '.join(missing)}")
+            raise ValueError(
+                "Source dataset is missing required fields: " + ", ".join(missing)
+            )
         rows = [typed_row(row) for row in reader]
+
     ids = [row["incident_id"] for row in rows]
     if len(ids) != len(set(ids)):
         raise ValueError("Source dataset contains duplicate incident_id values")
     return sorted(rows, key=lambda row: row["incident_id"])
 
 
-def read_mapping(mapping_path: Path) -> dict[str, Any]:
-    mapping = json.loads(mapping_path.read_text(encoding="utf-8"))
-    oecd = mapping.get("oecd_common_reporting_framework", [])
-    ids = [item.get("id") for item in oecd]
+def read_mapping(path: Path) -> dict[str, Any]:
+    mapping = json.loads(path.read_text(encoding="utf-8"))
+    ids = [item.get("id") for item in mapping.get("oecd_common_reporting_framework", [])]
     if ids != list(range(1, 30)):
         raise ValueError("OECD mapping must contain criteria 1 through 29 in order")
     return mapping
 
 
 def sources(row: dict[str, Any]) -> list[dict[str, str]]:
-    result = []
-    for index in (1, 2):
-        result.append(
-            {
-                "name": row[f"source_{index}_name"],
-                "url": row[f"source_{index}_url"],
-                "source_type": row[f"source_{index}_type"],
-            }
-        )
-    return result
+    return [
+        {
+            "name": row[f"source_{index}_name"],
+            "url": row[f"source_{index}_url"],
+            "source_type": row[f"source_{index}_type"],
+        }
+        for index in (1, 2)
+    ]
 
 
 def criterion(
@@ -143,139 +148,143 @@ def oecd_alignment(row: dict[str, Any]) -> dict[str, Any]:
     harm = split_pipe(row["harm_types"])
     affected = split_pipe(row["affected_parties"])
 
-    c: dict[str, dict[str, Any]] = {
-        "1": criterion(row["title"], "direct", ["title"]),
-        "2": criterion(row["summary"], "direct", ["summary"]),
-        "3": criterion(None, "unmapped", []),
-        "4": criterion(
-            {
-                "name": row["curator"],
-                "role": None,
-                "affiliation": None,
-                "email": None,
-                "relation_to_incident": None,
-            },
-            "partial",
-            ["curator"],
-            "AAIO records the curator name, not the full OECD submitter-information fields.",
-        ),
-        "5": criterion(
-            {"date": row["incident_date"], "precision": row["date_precision"]},
-            "partial",
-            ["incident_date", "date_precision"],
-            "AAIO stores the earliest reasonably supported date and makes imprecision explicit.",
-        ),
-        "6": criterion(
-            [row["country"]],
-            "partial",
-            ["country"],
-            "AAIO primary country is exported. countries_affected is preserved separately because affected geography is not identical to place of occurrence.",
-        ),
-        "7": criterion(srcs, "direct", ["source_1_*", "source_2_*"]),
-        "8": criterion(
-            {"name_or_tool": row["ai_system_or_tool"], "version": None},
-            "partial",
-            ["ai_system_or_tool"],
-            "AAIO v0.1.0 does not capture system version as a separate field.",
-        ),
-        "9": criterion(None, "unmapped", []),
-        "10": criterion(
-            None,
-            "unmapped",
-            ["severity_score", "severity_band", "magnitude", "scale", "criticality", "irreversibility"],
-            "AAIO severity is a project rubric and is not converted into OECD CRF severity categories.",
-            {
-                "score": row["severity_score"],
-                "band": row["severity_band"],
-                "dimensions": {
-                    "magnitude": row["magnitude"],
-                    "scale": row["scale"],
-                    "criticality": row["criticality"],
-                    "irreversibility": row["irreversibility"],
-                },
-            },
-        ),
-        "11": criterion(
-            None,
-            "approximate",
-            ["harm_types"],
-            "AAIO free-form harm descriptors are preserved but not silently converted to OECD controlled values.",
-            harm,
-        ),
-        "12": criterion(None, "unmapped", []),
-        "13": criterion(
-            None,
-            "unmapped",
-            ["reported_intent"],
-            "AAIO reported_intent is not equivalent to the OECD wrongful/unintended-use criterion.",
-            row["reported_intent"],
-        ),
-        "14": criterion(
-            None,
-            "approximate",
-            ["affected_parties"],
-            "AAIO affected-party labels are preserved but not converted to OECD stakeholder categories without review.",
-            affected,
-        ),
-        "15": criterion(None, "unmapped", []),
-        "16": criterion(None, "unmapped", []),
-        "17": criterion(
-            None,
-            "approximate",
-            ["sector"],
-            "AAIO sector labels are not ISIC-coded.",
-            row["sector"],
-        ),
-        "18": criterion(None, "unmapped", []),
-        "19": criterion(None, "unmapped", []),
-        "20": criterion(
-            None,
-            "unmapped",
-            ["scale"],
-            "AAIO scale measures impact exposure; it is not deployment breadth.",
-            row["scale"],
-        ),
-        "21": criterion(None, "unmapped", []),
-        "22": criterion(None, "unmapped", []),
-        "23": criterion(None, "unmapped", []),
-        "24": criterion(None, "unmapped", []),
-        "25": criterion(
-            None,
-            "unmapped",
-            ["system_type"],
-            "AAIO system_type is descriptive and is not converted to OECD task categories without manual classification.",
-            row["system_type"],
-        ),
-        "26": criterion(None, "unmapped", []),
-        "27": criterion(
-            row["response"],
-            "partial",
-            ["response"],
-            "AAIO response is free text; prevention/mitigation/ceasing/remediation categories are not inferred.",
-        ),
-        "28": criterion(None, "unmapped", []),
-        "29": criterion(
-            {
-                "reported_intent": row["reported_intent"],
-                "regulatory_or_legal_outcome": row["regulatory_or_legal_outcome"],
-                "qualification_basis": row["qualification_basis"],
-                "source_calibration_notes": row["notes"],
-            },
-            "partial",
-            ["reported_intent", "regulatory_or_legal_outcome", "qualification_basis", "notes"],
-        ),
+    criteria: dict[str, dict[str, Any]] = {
+        str(index): criterion(None, "unmapped", []) for index in range(1, 30)
     }
+    criteria.update(
+        {
+            "1": criterion(row["title"], "direct", ["title"]),
+            "2": criterion(row["summary"], "direct", ["summary"]),
+            "4": criterion(
+                {
+                    "name": row["curator"],
+                    "role": None,
+                    "affiliation": None,
+                    "email": None,
+                    "relation_to_incident": None,
+                },
+                "partial",
+                ["curator"],
+                "AAIO records the curator name, not the full OECD submitter-information fields.",
+            ),
+            "5": criterion(
+                {"date": row["incident_date"], "precision": row["date_precision"]},
+                "partial",
+                ["incident_date", "date_precision"],
+                "AAIO stores the earliest reasonably supported date and makes imprecision explicit.",
+            ),
+            "6": criterion(
+                [row["country"]],
+                "partial",
+                ["country"],
+                "AAIO primary country is exported separately from broader affected geography.",
+            ),
+            "7": criterion(srcs, "direct", ["source_1_*", "source_2_*"]),
+            "8": criterion(
+                {"name_or_tool": row["ai_system_or_tool"], "version": None},
+                "partial",
+                ["ai_system_or_tool"],
+                "AAIO does not currently capture system version as a separate field.",
+            ),
+            "10": criterion(
+                None,
+                "unmapped",
+                [
+                    "severity_score",
+                    "severity_band",
+                    "magnitude",
+                    "scale",
+                    "criticality",
+                    "irreversibility",
+                ],
+                "AAIO severity is a project rubric and is not converted into OECD CRF severity categories.",
+                {
+                    "score": row["severity_score"],
+                    "band": row["severity_band"],
+                    "dimensions": {
+                        "magnitude": row["magnitude"],
+                        "scale": row["scale"],
+                        "criticality": row["criticality"],
+                        "irreversibility": row["irreversibility"],
+                    },
+                },
+            ),
+            "11": criterion(
+                None,
+                "approximate",
+                ["harm_types"],
+                "AAIO free-form harm descriptors are preserved but not silently converted to OECD controlled values.",
+                harm,
+            ),
+            "13": criterion(
+                None,
+                "unmapped",
+                ["reported_intent"],
+                "AAIO reported_intent is not equivalent to the OECD wrongful/unintended-use criterion.",
+                row["reported_intent"],
+            ),
+            "14": criterion(
+                None,
+                "approximate",
+                ["affected_parties"],
+                "AAIO affected-party labels are preserved but not converted to OECD stakeholder categories without review.",
+                affected,
+            ),
+            "17": criterion(
+                None,
+                "approximate",
+                ["sector"],
+                "AAIO sector labels are not ISIC-coded.",
+                row["sector"],
+            ),
+            "20": criterion(
+                None,
+                "unmapped",
+                ["scale"],
+                "AAIO scale measures impact exposure; it is not deployment breadth.",
+                row["scale"],
+            ),
+            "25": criterion(
+                None,
+                "unmapped",
+                ["system_type"],
+                "AAIO system_type is descriptive and is not converted to OECD task categories without manual classification.",
+                row["system_type"],
+            ),
+            "27": criterion(
+                row["response"],
+                "partial",
+                ["response"],
+                "AAIO response is free text; response categories are not inferred.",
+            ),
+            "29": criterion(
+                {
+                    "reported_intent": row["reported_intent"],
+                    "regulatory_or_legal_outcome": row["regulatory_or_legal_outcome"],
+                    "qualification_basis": row["qualification_basis"],
+                    "source_calibration_notes": row["notes"],
+                },
+                "partial",
+                [
+                    "reported_intent",
+                    "regulatory_or_legal_outcome",
+                    "qualification_basis",
+                    "notes",
+                ],
+            ),
+        }
+    )
 
-    mandatory_ids = ["1", "2", "3", "4", "7", "10", "11"]
+    mandatory = ["1", "2", "3", "4", "7", "10", "11"]
     non_direct = [
         item
-        for item in mandatory_ids
-        if c[item]["status"] != "direct" or c[item]["value"] is None
+        for item in mandatory
+        if criteria[item]["status"] != "direct" or criteria[item]["value"] is None
     ]
     return {
-        "criteria": c,
+        "criteria": criteria,
         "strict_mandatory_mapping": {
-            "criterion_ids": [int(item) for item in mandatory_ids],
+            "criterion_ids": [int(item) for item in mandatory],
             "complete": not non_direct,
             "missing_or_non_direct": [int(item) for item in non_direct],
             "note": "AAIO strict mapping is an internal quality signal, not an OECD submission-readiness determination.",
@@ -284,17 +293,18 @@ def oecd_alignment(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def aiid_alignment(row: dict[str, Any]) -> dict[str, Any]:
-    existing_id = int(row["aiid_id"]) if str(row["aiid_id"]).strip() else None
+    aiid_id = str(row["aiid_id"]).strip()
+    aiid_url = str(row["aiid_url"]).strip()
+    existing_incident = None
+    if aiid_id:
+        existing_incident = {
+            "incident_id": int(aiid_id),
+            "url": aiid_url,
+            "status": "cross_reference_only",
+        }
+
     return {
-        "existing_incident": (
-            {
-                "incident_id": existing_id,
-                "url": row["aiid_url"],
-                "status": "cross_reference_only",
-            }
-            if existing_id is not None
-            else None
-        ),
+        "existing_incident": existing_incident,
         "incident_title": {"value": row["title"], "status": "direct"},
         "description": {"value": row["summary"], "status": "direct"},
         "incident_date": {
@@ -319,12 +329,12 @@ def aiid_alignment(row: dict[str, Any]) -> dict[str, Any]:
         "taxonomy_annotations": {
             "value": None,
             "status": "unmapped",
-            "note": "AAIO does not invent AIID CSET, GMF, MIT, or other taxonomy annotations.",
+            "note": "AAIO does not invent AIID taxonomy annotations.",
         },
     }
 
 
-def record(row: dict[str, Any]) -> dict[str, Any]:
+def build_record(row: dict[str, Any]) -> dict[str, Any]:
     return {
         "aaio": {
             "incident_id": row["incident_id"],
@@ -373,32 +383,8 @@ def record(row: dict[str, Any]) -> dict[str, Any]:
                 "taxonomy_annotations",
             ],
             "oecd_criteria_unmapped_or_non_direct": [
-                3,
-                4,
-                5,
-                6,
-                8,
-                9,
-                10,
-                11,
-                12,
-                13,
-                14,
-                15,
-                16,
-                17,
-                18,
-                19,
-                20,
-                21,
-                22,
-                23,
-                24,
-                25,
-                26,
-                27,
-                28,
-                29,
+                3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+                19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29,
             ],
             "aaio_fields_preserved_without_external_normalisation": [
                 "evidence_confidence",
@@ -420,9 +406,6 @@ def record(row: dict[str, Any]) -> dict[str, Any]:
 def build_export(source: Path, mapping_path: Path) -> dict[str, Any]:
     rows = read_rows(source)
     mapping = read_mapping(mapping_path)
-    source_bytes = source.read_bytes()
-    mapping_bytes = mapping_path.read_bytes()
-    last_verified = sorted({row["last_verified"] for row in rows})
     return {
         "export_format": "AAIO Interoperability Export",
         "export_schema_version": EXPORT_SCHEMA_VERSION,
@@ -430,25 +413,26 @@ def build_export(source: Path, mapping_path: Path) -> dict[str, Any]:
         "disclaimer": "Semantic alignment only. This file is not an official AIID submission schema, OECD AIM ingest schema, or endorsement by AIID/OECD.",
         "source_dataset": {
             "name": "Africa AI Incident Observatory",
-            "version": SOURCE_DATASET_VERSION,
+            "version": dataset_version(),
             "path": "data/incidents.csv",
-            "sha256": sha256_bytes(source_bytes),
+            "sha256": sha256_bytes(source.read_bytes()),
             "record_count": len(rows),
-            "last_verified_values": last_verified,
+            "last_verified_values": sorted({row["last_verified"] for row in rows}),
         },
         "mapping": {
             "path": "mapping/interoperability-map-v1.json",
-            "sha256": sha256_bytes(mapping_bytes),
+            "sha256": sha256_bytes(mapping_path.read_bytes()),
             "references": mapping["references"],
             "status_definitions": mapping["status_definitions"],
         },
-        "records": [record(row) for row in rows],
+        "records": [build_record(row) for row in rows],
     }
 
 
 def canonical_json_bytes(payload: dict[str, Any]) -> bytes:
-    text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    return text.encode("utf-8")
+    return (
+        json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8")
 
 
 def write_export(
@@ -467,9 +451,11 @@ def check_export(payload: dict[str, Any], output: Path, sha_output: Path) -> boo
     expected_digest = sha256_bytes(expected)
     if not output.exists() or not sha_output.exists():
         return False
-    actual = output.read_bytes()
-    actual_sha_line = sha_output.read_text(encoding="utf-8").strip()
-    return actual == expected and actual_sha_line == f"{expected_digest}  {output.name}"
+    return (
+        output.read_bytes() == expected
+        and sha_output.read_text(encoding="utf-8").strip()
+        == f"{expected_digest}  {output.name}"
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -496,9 +482,11 @@ def main() -> int:
             )
             return 0
         print(
-            "ERROR: interoperability export or SHA-256 manifest is missing/stale. Run scripts/export_interoperability.py"
+            "ERROR: interoperability export or SHA-256 manifest is missing/stale. "
+            "Run scripts/export_interoperability.py"
         )
         return 1
+
     data, digest = write_export(payload, args.output, args.sha_output)
     print(f"Wrote {payload['source_dataset']['record_count']} records to {args.output}")
     print(f"SHA256 {digest}")
