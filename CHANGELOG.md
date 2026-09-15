@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.2.0 - 2026-09-15
+
+### Added
+- Two operational AI incidents promoted into the versioned core dataset, expanding coverage into Kenyan clinical decision support and South African professional legal research.
+- Append-only `data/record_history.csv` for material record changes and promotion provenance.
+- Explicit repository `VERSION` marker and release-consistency validation.
+- Promotion traceability from `AAIO-OP-*` staging records to stable core incident IDs.
+- Release and provenance policy covering semantic-style versioning, correction history, release gates and DOI archiving discipline.
+- Public impact/adoption ledger and an AIID submission packet for original AAIO cases.
+- Dashboard pipeline/provenance views and a direct incident-submission path.
+
+### Changed
+- Core dataset increased from 17 to 19 records while retaining 9 primary African countries.
+- Operational evidence validation now checks promoted core IDs and release metadata.
+- Dashboard version is read from the canonical `VERSION` file rather than hard-coded.
+- CI now validates release metadata and material record history in addition to data, multilingual evidence, operational evidence, pytest and deterministic interoperability export generation.
+
+### Research significance
+- v0.2.0 moves AAIO beyond a synthetic-media-heavy seed by incorporating a peer-reviewed deployed-healthcare safety case and a direct judicial record of professional generative-AI failure.
+- The release deliberately preserves the distinction between evidence strength, severity, candidate evidence and confirmed core incidents.
+
 ## 0.1.2 - 2026-09-09
 
 ### Added
