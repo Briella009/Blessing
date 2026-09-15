@@ -2,13 +2,13 @@
 
 ## Purpose
 
-AAIO's v0.1 seed is visibly concentrated in synthetic media, information integrity and public-facing generative-AI failures. Issue #1 asks whether the same evidence discipline can identify realised AI harms in operational settings where failures may be less visible.
+AAIO's original seed was visibly concentrated in synthetic media, information integrity and public-facing generative-AI failures. The operational workstream tests whether the same evidence discipline can identify realised AI harms in settings where failures are less visible.
 
-This workstream does **not** lower the core inclusion threshold. It creates a reviewable operational register before records are promoted into `data/incidents.csv` and the versioned interoperability export.
+This workstream does **not** lower the core inclusion threshold. It preserves a reviewable operational register even after qualifying records are promoted into `data/incidents.csv`.
 
 ## Promotion standard
 
-An operational record is marked `eligible_for_core` only when all five conditions are met:
+An operational record may be marked `eligible_for_core` only when all five conditions are met:
 
 1. a credible source establishes AI involvement rather than merely automation, digitisation or biometrics;
 2. the source documents a realised adverse output, event or material effect rather than a hypothetical risk;
@@ -16,11 +16,11 @@ An operational record is marked `eligible_for_core` only when all five condition
 4. at least one traceable public source supports the record, with primary or peer-reviewed evidence preferred;
 5. AAIO wording does not upgrade evidence beyond what the source establishes.
 
-`eligible_for_core` means the record has passed this operational review. It does **not** mean the record has already been inserted into the versioned core dataset. Promotion is a separate release action so that core-data, dashboard and interoperability changes remain synchronised.
+When an eligible record is promoted, its operational ID is retained and `core_promotion_status` becomes `promoted_to_core`. The staging record then records both the stable `promoted_core_id` and `promoted_in_release`. This prevents the evidence-review history from disappearing once a case enters the core dataset.
 
-## First qualifying operational records
+## v0.2.0 promotions
 
-### AAIO-OP-0001 — Kenya — clinical decision support
+### AAIO-OP-0001 → AAIO-0018 — Kenya — clinical decision support
 
 A peer-reviewed 2026 Nature Health evaluation reviewed 1,469 records from an EHR-embedded LLM clinical decision-support system deployed in 16 Kenyan primary-care clinics between July and September 2024. Physician reviewers identified actively harmful LLM recommendations in 115 encounters (7.8%); 67 harmful recommendations appeared in final documentation. The paper separately reports 50 hallucination encounters.
 
@@ -31,7 +31,7 @@ Sources:
 - PubMed: https://pubmed.ncbi.nlm.nih.gov/42272940/
 - Later Nature Medicine trial: https://www.nature.com/articles/s41591-026-04503-6
 
-### AAIO-OP-0002 — South Africa — professional legal research
+### AAIO-OP-0002 → AAIO-0019 — South Africa — professional legal research
 
 In *Parker v Forsyth NNO and Others*, South African lawyers relied on legal authorities sourced through ChatGPT that could not be verified. Later South African High Court authority in *Mavundla* recounts that the attorneys admitted they had neither accessed nor read the cases and that the references had been sourced from ChatGPT. The failure therefore has a direct AI linkage and a realised professional/court-process effect.
 
@@ -53,14 +53,15 @@ Those leads are not converted into core incidents merely to satisfy sector quota
 - a beneficial or neutral deployment is not re-labelled as an incident;
 - lack of public evidence is recorded as a visibility gap, not as evidence that the sector has no AI incidents.
 
-This negative-result discipline is part of AAIO's methodology. The operational expansion should become broader as stronger public evidence emerges, but not less defensible.
+This negative-result discipline is part of AAIO's methodology. Operational coverage should become broader as stronger public evidence emerges, but not less defensible.
 
 ## Relationship to other AAIO workstreams
 
 This file is intentionally distinct from:
 
-- `data/multilingual_incidents.csv`, which addresses language-discovery and translation provenance;
+- `data/multilingual_incidents.csv`, which addresses language discovery and translation provenance;
 - `mapping/interoperability-map-v1.json` and `scripts/export_interoperability.py`, which address semantic interoperability with external incident frameworks;
-- `data/watchlist.csv`, which holds relevant cases that do not currently establish the AI linkage required for core inclusion.
+- `data/watchlist.csv`, which holds relevant cases that do not currently establish the AI linkage required for core inclusion;
+- `data/record_history.csv`, which records material changes once a case becomes part of the versioned core dataset.
 
-The operational register is an evidence-staging layer. A future versioned release can promote qualifying records into `data/incidents.csv`, regenerate the deterministic interoperability export and update the dashboard in one auditable change.
+Operational staging, core promotion and record history together create an auditable path from **candidate evidence → reviewed case → versioned incident**.
