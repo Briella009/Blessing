@@ -1,21 +1,27 @@
-# Interactive Dashboard
+# Interactive dashboard
 
 AAIO includes a Streamlit research dashboard in `app.py`.
 
 ## What the dashboard is for
 
-The dashboard is designed for evidence exploration, not prevalence ranking. It provides:
+The dashboard is designed for **evidence exploration, provenance and research reuse**, not prevalence ranking. It provides:
 
 - country, sector, year, severity and evidence-confidence filters;
-- an Africa map showing where current seed records are documented;
+- an Africa map showing where current core records are documented;
 - timelines and sector distributions;
 - record-level source inspection;
+- conditional AIID links so original AAIO records are not given fictitious upstream identifiers;
 - a separate evidence-quality view;
-- a watchlist for cases excluded because AI attribution is not sufficiently established;
-- CSV export of filtered records;
-- links to methodology and source evidence.
+- a **Pipeline & provenance** view showing operational staging, multilingual evidence candidates and material record history;
+- a conservative watchlist for cases excluded because AI attribution is not sufficiently established;
+- CSV export of filtered core records;
+- a direct link to the structured community incident-submission form;
+- links to methodology, release policy and source evidence;
+- a working filter reset that clears Streamlit widget state rather than only rerunning the page.
 
-A country with fewer records should never be interpreted as having fewer AI harms. The seed dataset reflects public visibility, source availability and curator coverage.
+The displayed dataset version is read from the repository-root `VERSION` file, preventing the dashboard banner from drifting away from citation and release metadata.
+
+A country with fewer records should never be interpreted as having fewer AI harms. The dataset reflects public visibility, language, source availability, sector transparency and curator coverage.
 
 ## Run locally
 
@@ -23,6 +29,7 @@ A country with fewer records should never be interpreted as having fewer AI harm
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+python scripts/validate_release.py
 streamlit run app.py
 ```
 
@@ -34,7 +41,7 @@ streamlit run app.py
 4. Set the entrypoint to `app.py`.
 5. Deploy publicly if the dashboard is intended for research/community use.
 
-No secrets or external API keys are required for the seed dashboard.
+No secrets or external API keys are required.
 
 ## Visual design
 
