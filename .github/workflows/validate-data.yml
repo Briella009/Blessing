@@ -17,6 +17,7 @@ jobs:
       - run: python scripts/validate.py
       - run: python scripts/validate_multilingual.py
       - run: python scripts/validate_operational.py
+      - run: python scripts/validate_release.py
       - run: pytest -q
       - name: Smoke-test deterministic interoperability export
         run: |
