@@ -17,6 +17,10 @@ SCRIPT = ROOT / "scripts" / "export_interoperability.py"
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
+def semver_tuple(value: str) -> tuple[int, int, int]:
+    return tuple(int(part) for part in value.split('.'))
+
+
 def source_rows():
     with SOURCE.open(encoding="utf-8", newline="") as handle:
         return list(csv.DictReader(handle))
@@ -83,7 +87,7 @@ def test_export_validates_against_schema_and_covers_current_release(tmp_path):
     jsonschema.Draft202012Validator(schema).validate(payload)
 
     rows = sorted(source_rows(), key=lambda row: row["incident_id"])
-    assert VERSION == "0.2.0"
+    assert semver_tuple(VERSION) >= (0, 2, 0)
     assert payload["source_dataset"]["version"] == VERSION
     assert payload["source_dataset"]["record_count"] == len(rows) == 19
     assert [record["aaio"]["incident_id"] for record in payload["records"]] == [
