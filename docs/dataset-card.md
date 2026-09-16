@@ -21,7 +21,7 @@ AAIO was created to make that evidence easier to inspect, challenge, reuse and s
 
 ## Version
 
-- Dataset version: `0.2.1`
+- Dataset version: `0.2.2`
 - Release line: `0.2.x`
 - Canonical version marker: `VERSION`
 - Core data: `data/incidents.csv`
@@ -123,6 +123,14 @@ The repository CI validates:
 
 Passing CI means the repository satisfies its declared structural and consistency checks. It does **not** certify that every external source is permanently available or that every incident interpretation is beyond dispute.
 
+## Source persistence monitoring
+
+AAIO v0.2.2 adds a separate maintenance control for public evidence URLs. `scripts/check_source_health.py` builds a deduplicated inventory of source links used across the core, multilingual, operational and watchlist layers and can test whether those URLs are practically reachable from a GitHub runner.
+
+The audit distinguishes missing pages from rate limits, bot blocks, server failures and network errors. It is deliberately **non-blocking**: HTTP reachability is not evidence validity, and a temporary 403, 429 or timeout must not automatically change a record's confidence or inclusion status.
+
+See `docs/source-resilience.md`.
+
 ## Intended uses
 
 AAIO is suitable for:
@@ -152,7 +160,7 @@ AAIO should not be used to:
 
 AAIO is affected by public-reporting visibility, language coverage, internet accessibility, source permanence, media capacity, litigation/publication delays and curator capacity. Public-facing synthetic-media incidents are generally easier to observe than failures inside hospitals, lenders, employers, schools and government systems.
 
-The v0.2.x line has begun to address this by adding operational incidents and a multilingual evidence layer, but those changes do not make the dataset comprehensive or statistically representative.
+The v0.2.x line has begun to address this by adding operational incidents, a multilingual evidence layer and source-persistence monitoring, but those changes do not make the dataset comprehensive or statistically representative.
 
 Some incidents have cross-border effects while still requiring one primary country field for analysis. Users should inspect `countries_affected` and source context rather than treating `country` as the only geography.
 
@@ -162,7 +170,7 @@ AAIO minimizes unnecessary personal information, avoids republishing harmful med
 
 ## Maintenance and corrections
 
-Material corrections should update the core record, `last_verified`, `data/record_history.csv` and the changelog. Staged evidence retains its original staging identifier after promotion. See `docs/release-policy.md`.
+Material corrections should update the core record, `last_verified`, `data/record_history.csv` and the changelog. Staged evidence retains its original staging identifier after promotion. Public-source link failures are reviewed under `docs/source-resilience.md` and do not trigger automatic evidence downgrades. See `docs/release-policy.md`.
 
 ## Interoperability
 

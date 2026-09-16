@@ -1,0 +1,45 @@
+name: Audit public evidence links
+
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Audit public evidence URLs
+        run: |
+          python scripts/check_source_health.py \
+            --output /tmp/aaio-source-health.json \
+            --markdown-output /tmp/aaio-source-health.md
+
+      - name: Add audit to job summary
+        if: always()
+        run: |
+          if [ -f /tmp/aaio-source-health.md ]; then
+            cat /tmp/aaio-source-health.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Source-health report was not generated." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload source-health reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aaio-source-health-${{ github.run_id }}
+          path: |
+            /tmp/aaio-source-health.json
+            /tmp/aaio-source-health.md
+          if-no-files-found: warn
+          retention-days: 30

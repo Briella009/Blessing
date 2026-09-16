@@ -3,7 +3,7 @@
   "name": "africa-ai-incident-observatory",
   "title": "Africa AI Incident Observatory",
   "description": "A source-traceable open research dataset documenting publicly evidenced AI incidents affecting African people, institutions and information environments, with explicit evidence confidence, provenance, multilingual discovery and operational-review layers.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "homepage": "https://github.com/Briella009/Africa-AI-Incident-Observatory",
   "licenses": [
     {
