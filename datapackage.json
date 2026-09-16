@@ -42,43 +42,55 @@
   ],
   "resources": [
     {
+      "profile": "tabular-data-resource",
       "name": "core-incidents",
       "path": "data/incidents.csv",
       "format": "csv",
       "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "schema": "schema/core-table-schema.json",
       "description": "Versioned core incident records that satisfy AAIO inclusion criteria."
     },
     {
+      "profile": "tabular-data-resource",
       "name": "multilingual-evidence",
       "path": "data/multilingual_incidents.csv",
       "format": "csv",
       "mediatype": "text/csv",
+      "encoding": "utf-8",
       "description": "French-, Arabic- and Portuguese-language discovery records with translation provenance and uncertainty."
     },
     {
+      "profile": "tabular-data-resource",
       "name": "operational-evidence",
       "path": "data/operational_incidents.csv",
       "format": "csv",
       "mediatype": "text/csv",
+      "encoding": "utf-8",
       "description": "Operational AI incident staging and promotion records with links to stable core IDs."
     },
     {
+      "profile": "tabular-data-resource",
       "name": "watchlist",
       "path": "data/watchlist.csv",
       "format": "csv",
       "mediatype": "text/csv",
+      "encoding": "utf-8",
       "description": "Technology-governance cases intentionally excluded from the core dataset because AI attribution is not sufficiently established."
     },
     {
+      "profile": "tabular-data-resource",
       "name": "record-history",
       "path": "data/record_history.csv",
       "format": "csv",
       "mediatype": "text/csv",
+      "encoding": "utf-8",
       "description": "Append-only ledger for material record changes and promotion provenance."
     }
   ],
   "_aaio": {
-    "core_schema": "schema/incident.schema.json",
+    "core_json_schema": "schema/incident.schema.json",
+    "core_table_schema": "schema/core-table-schema.json",
     "data_dictionary": "docs/data-dictionary.md",
     "methodology": "docs/methodology.md",
     "dataset_card": "docs/dataset-card.md",
