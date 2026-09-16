@@ -5,16 +5,23 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+SEMVER = re.compile(r'\d+\.\d+\.\d+')
 
 
 def fail(errors, message):
     errors.append(message)
 
 
+def version_tuple(value):
+    if not SEMVER.fullmatch(value):
+        raise ValueError(value)
+    return tuple(int(part) for part in value.split('.'))
+
+
 def main():
     errors = []
     version = (ROOT / 'VERSION').read_text(encoding='utf-8').strip()
-    if not re.fullmatch(r'\d+\.\d+\.\d+', version):
+    if not SEMVER.fullmatch(version):
         fail(errors, f'Invalid VERSION value: {version!r}')
 
     citation = (ROOT / 'CITATION.cff').read_text(encoding='utf-8')
@@ -42,8 +49,14 @@ def main():
             target = row.get('promoted_core_id', '')
             if target not in core_ids:
                 fail(errors, f"{row['incident_id']} points to missing core ID {target}")
-            if row.get('promoted_in_release') != version:
-                fail(errors, f"{row['incident_id']} promotion release does not match VERSION")
+            promoted_release = row.get('promoted_in_release', '')
+            if not SEMVER.fullmatch(promoted_release):
+                fail(errors, f"{row['incident_id']} has invalid promotion release {promoted_release!r}")
+            else:
+                if SEMVER.fullmatch(version) and version_tuple(promoted_release) > version_tuple(version):
+                    fail(errors, f"{row['incident_id']} promotion release {promoted_release} is newer than VERSION {version}")
+                if f'## {promoted_release} ' not in changelog:
+                    fail(errors, f"{row['incident_id']} promotion release {promoted_release} is missing from CHANGELOG.md")
 
     history_path = ROOT / 'data' / 'record_history.csv'
     with history_path.open(encoding='utf-8', newline='') as handle:
@@ -61,11 +74,15 @@ def main():
             fail(errors, f'{cid} references missing core incident {incident_id}')
         if not row.get('summary', '').strip():
             fail(errors, f'{cid} has an empty summary')
-        if row.get('release') and not re.fullmatch(r'\d+\.\d+\.\d+', row['release']):
-            fail(errors, f'{cid} has invalid release metadata')
+        release = row.get('release', '')
+        if release:
+            if not SEMVER.fullmatch(release):
+                fail(errors, f'{cid} has invalid release metadata')
+            elif SEMVER.fullmatch(version) and version_tuple(release) > version_tuple(version):
+                fail(errors, f'{cid} history release {release} is newer than VERSION {version}')
 
-    if version == '0.2.0' and len(core) != 19:
-        fail(errors, f'v0.2.0 must contain exactly 19 core records, found {len(core)}')
+    if version_tuple(version) >= (0, 2, 0) and len(core) < 19:
+        fail(errors, f'v{version} must preserve at least the 19 core records established in v0.2.0; found {len(core)}')
 
     if errors:
         print('\n'.join('ERROR: ' + error for error in errors))

@@ -1,0 +1,100 @@
+{
+  "profile": "data-package",
+  "name": "africa-ai-incident-observatory",
+  "title": "Africa AI Incident Observatory",
+  "description": "A source-traceable open research dataset documenting publicly evidenced AI incidents affecting African people, institutions and information environments, with explicit evidence confidence, provenance, multilingual discovery and operational-review layers.",
+  "version": "0.2.1",
+  "homepage": "https://github.com/Briella009/Africa-AI-Incident-Observatory",
+  "licenses": [
+    {
+      "name": "CC-BY-4.0",
+      "title": "Creative Commons Attribution 4.0 International",
+      "path": "https://creativecommons.org/licenses/by/4.0/"
+    }
+  ],
+  "contributors": [
+    {
+      "title": "Blessing Ezeobioha",
+      "role": "author and curator",
+      "path": "https://orcid.org/0009-0005-9972-9380"
+    }
+  ],
+  "keywords": [
+    "Africa",
+    "artificial intelligence",
+    "AI incidents",
+    "AI governance",
+    "AI safety",
+    "cybersecurity",
+    "incident monitoring",
+    "open research data",
+    "public-interest technology"
+  ],
+  "sources": [
+    {
+      "title": "AI Incident Database",
+      "path": "https://incidentdatabase.ai/"
+    },
+    {
+      "title": "OECD AI Incidents and Hazards Monitor methodology",
+      "path": "https://oecd.ai/en/incidents-methodology"
+    }
+  ],
+  "resources": [
+    {
+      "profile": "tabular-data-resource",
+      "name": "core-incidents",
+      "path": "data/incidents.csv",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "schema": "schema/core-table-schema.json",
+      "description": "Versioned core incident records that satisfy AAIO inclusion criteria."
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "multilingual-evidence",
+      "path": "data/multilingual_incidents.csv",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "description": "French-, Arabic- and Portuguese-language discovery records with translation provenance and uncertainty."
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "operational-evidence",
+      "path": "data/operational_incidents.csv",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "description": "Operational AI incident staging and promotion records with links to stable core IDs."
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "watchlist",
+      "path": "data/watchlist.csv",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "description": "Technology-governance cases intentionally excluded from the core dataset because AI attribution is not sufficiently established."
+    },
+    {
+      "profile": "tabular-data-resource",
+      "name": "record-history",
+      "path": "data/record_history.csv",
+      "format": "csv",
+      "mediatype": "text/csv",
+      "encoding": "utf-8",
+      "description": "Append-only ledger for material record changes and promotion provenance."
+    }
+  ],
+  "_aaio": {
+    "core_json_schema": "schema/incident.schema.json",
+    "core_table_schema": "schema/core-table-schema.json",
+    "data_dictionary": "docs/data-dictionary.md",
+    "methodology": "docs/methodology.md",
+    "dataset_card": "docs/dataset-card.md",
+    "interoperability_mapping": "mapping/interoperability-map-v1.json",
+    "claim_boundary": "Record counts reflect documented evidence visibility, not incident prevalence by country."
+  }
+}

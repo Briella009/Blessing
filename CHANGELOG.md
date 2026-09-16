@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.1 - 2026-09-16
+
+### Added
+- `datapackage.json` machine-readable descriptor for the core, multilingual, operational, watchlist and record-history resources.
+- Schema.org `Dataset` JSON-LD metadata at `metadata/aaio-dataset.jsonld` for machine discovery.
+- A comprehensive `docs/dataset-card.md` documenting motivation, composition, collection process, intended uses, limitations, ethics, maintenance and interoperability.
+- `scripts/validate_metadata.py` to enforce version, license, resource-path and machine-readable metadata consistency.
+
+### Changed
+- Release validation now preserves historical promotion provenance across later patch releases instead of incorrectly requiring every promotion to occur in the current version.
+- Release-integrity tests are version-aware and explicitly preserve the v0.2.0 origin of the two operational-to-core promotions.
+- README navigation and research-data documentation now surface machine-readable metadata, the dataset card and the evidence pipeline more prominently.
+- CI validates machine-readable research-data metadata alongside the existing incident, multilingual, operational, release and interoperability checks.
+
+### Research significance
+- v0.2.1 strengthens AAIO as a reusable research dataset rather than only a GitHub project. The new metadata layer improves machine discovery, documentation quality and downstream reuse while preserving the project's existing claim boundaries.
+
 ## 0.2.0 - 2026-09-15
 
 ### Added

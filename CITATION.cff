@@ -9,8 +9,8 @@ authors:
 repository-code: "https://github.com/Briella009/Africa-AI-Incident-Observatory"
 url: "https://github.com/Briella009/Africa-AI-Incident-Observatory"
 license: "CC-BY-4.0"
-version: "0.2.0"
-date-released: "2026-09-15"
+version: "0.2.1"
+date-released: "2026-09-16"
 keywords:
   - artificial intelligence
   - AI incidents
@@ -20,3 +20,5 @@ keywords:
   - public interest technology
   - AI safety
   - incident monitoring
+  - open research data
+  - dataset provenance

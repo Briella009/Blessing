@@ -1,0 +1,66 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "Africa AI Incident Observatory",
+  "alternateName": "AAIO",
+  "description": "A source-traceable open research dataset documenting publicly evidenced AI incidents affecting African people, institutions and information environments, with explicit evidence confidence, provenance, multilingual discovery and operational-review layers.",
+  "version": "0.2.1",
+  "datePublished": "2026-09-16",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "url": "https://github.com/Briella009/Africa-AI-Incident-Observatory",
+  "identifier": "https://github.com/Briella009/Africa-AI-Incident-Observatory",
+  "creator": {
+    "@type": "Person",
+    "name": "Blessing Ezeobioha",
+    "sameAs": [
+      "https://orcid.org/0009-0005-9972-9380",
+      "https://github.com/Briella009",
+      "https://www.linkedin.com/in/blessing-ezeobioha-"
+    ]
+  },
+  "spatialCoverage": {
+    "@type": "Place",
+    "name": "Africa"
+  },
+  "temporalCoverage": "2023-08-20/2026-04-30",
+  "keywords": [
+    "artificial intelligence",
+    "AI incidents",
+    "AI governance",
+    "AI safety",
+    "Africa",
+    "cybersecurity",
+    "incident monitoring",
+    "responsible AI",
+    "public-interest technology",
+    "open research data"
+  ],
+  "isAccessibleForFree": true,
+  "distribution": [
+    {
+      "@type": "DataDownload",
+      "name": "AAIO core incidents CSV",
+      "encodingFormat": "text/csv",
+      "contentUrl": "https://raw.githubusercontent.com/Briella009/Africa-AI-Incident-Observatory/main/data/incidents.csv"
+    },
+    {
+      "@type": "DataDownload",
+      "name": "AAIO Data Package descriptor",
+      "encodingFormat": "application/json",
+      "contentUrl": "https://raw.githubusercontent.com/Briella009/Africa-AI-Incident-Observatory/main/datapackage.json"
+    }
+  ],
+  "isBasedOn": [
+    "https://incidentdatabase.ai/",
+    "https://oecd.ai/en/incidents-methodology",
+    "https://airc.nist.gov/airmf-resources/airmf/"
+  ],
+  "measurementTechnique": [
+    "source-traceable incident curation",
+    "evidence-confidence grading",
+    "deterministic severity scoring",
+    "multilingual source review",
+    "operational incident evidence review"
+  ],
+  "usageInfo": "https://github.com/Briella009/Africa-AI-Incident-Observatory/blob/main/docs/dataset-card.md"
+}
