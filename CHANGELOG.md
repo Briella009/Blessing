@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.2 - 2026-09-16
+
+### Added
+- `scripts/check_source_health.py` for deduplicated monitoring of public evidence URLs across core, multilingual, operational and watchlist layers.
+- Conservative link-health categories that distinguish `access_blocked`, `not_found`, server failures and network failures rather than treating every non-2xx response as a dead source.
+- Weekly GitHub Actions source-health audit with JSON and Markdown reports uploaded as temporary workflow artifacts.
+- `docs/source-resilience.md` documenting interpretation boundaries, request strategy, maintenance response and copyright-safe source replacement practices.
+- Non-network tests for source inventory, provenance preservation, status classification and inventory-only reporting.
+
+### Changed
+- Dataset discovery metadata now records periodic public evidence link-health monitoring as a maintenance technique.
+- README now surfaces source resilience as part of AAIO's provenance model.
+
+### Research significance
+- v0.2.2 extends provenance from recording *which evidence supports an incident* to monitoring *whether that evidence remains practically reviewable over time*. The audit is deliberately non-blocking because bot protection, rate limits and temporary outages do not determine evidence validity.
+
 ## 0.2.1 - 2026-09-16
 
 ### Added
