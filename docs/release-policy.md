@@ -10,7 +10,7 @@ AAIO uses semantic-style dataset versions:
 - **MINOR** — new core incidents, new evidence layers, substantial interoperability or dashboard capabilities, or material methodology extensions.
 - **PATCH** — corrections, source refreshes, wording calibration, metadata fixes and non-breaking tooling changes.
 
-The repository-root `VERSION` file is the canonical human-readable version marker. `CITATION.cff`, the changelog and dashboard must agree with it before a release is considered ready.
+The repository-root `VERSION` file is the canonical human-readable version marker. `CITATION.cff`, `CHANGELOG.md`, `README.md`, `datapackage.json`, Schema.org JSON-LD metadata and the dashboard must agree with it before a release is considered ready.
 
 ## Release gates
 
@@ -18,11 +18,15 @@ A release is ready only when all of the following are true:
 
 1. `python scripts/validate.py` passes for the core dataset.
 2. Multilingual and operational staging validators pass.
-3. The full pytest suite passes.
-4. The deterministic interoperability export can be regenerated.
-5. Core records retain traceable public evidence and calibrated uncertainty.
-6. Material record changes are entered in `data/record_history.csv`.
-7. Version metadata is synchronized across `VERSION`, `CITATION.cff`, `CHANGELOG.md` and the dashboard.
+3. `python scripts/validate_release.py` confirms version, history and promotion consistency.
+4. `python scripts/validate_metadata.py` confirms machine-readable metadata, resource paths, license and version consistency.
+5. The full pytest suite passes.
+6. The deterministic interoperability export can be regenerated.
+7. Core records retain traceable public evidence and calibrated uncertainty.
+8. Material record changes are entered in `data/record_history.csv`.
+9. Version metadata is synchronized across release-facing metadata and documentation.
+
+A green CI run confirms the project's declared structural checks. It is not a certification that every external source is permanent or that every incident interpretation is beyond dispute.
 
 ## Promotion from evidence layers
 
@@ -35,13 +39,25 @@ Candidate records may live outside `data/incidents.csv` while evidence is still 
 - calibrated language that does not exceed what the sources establish; and
 - evidence confidence A or B unless an explicit release note explains an exception.
 
-When a staged operational record is promoted, the staging record keeps its original `AAIO-OP-*` identifier and receives a `promoted_core_id` plus `promoted_in_release`. This preserves review history rather than erasing the pre-release evidence trail.
+When a staged operational record is promoted, the staging record keeps its original `AAIO-OP-*` identifier and receives a `promoted_core_id` plus `promoted_in_release`. The promotion release is historical provenance and **must not be rewritten merely because the repository later moves to a patch or minor version**.
 
 ## Corrections and record history
 
 AAIO does not silently rewrite material facts. Material changes should be appended to `data/record_history.csv`, including the affected incident ID, release, change type, fields affected, a concise reason and a supporting evidence URL where available.
 
 Typographical changes that do not alter meaning do not require a history entry.
+
+## Research-data metadata
+
+AAIO maintains multiple complementary metadata forms for different consumers:
+
+- `CITATION.cff` for human and GitHub citation workflows;
+- `datapackage.json` for machine-readable resource discovery;
+- `schema/core-table-schema.json` for typed tabular structure;
+- `metadata/aaio-dataset.jsonld` for Schema.org dataset discovery; and
+- `docs/dataset-card.md` for human-readable context, intended uses and limitations.
+
+These files improve reuse and machine discovery but do not constitute formal FAIR certification.
 
 ## Persistent citation and archiving
 
@@ -58,4 +74,4 @@ Generated interoperability files are derived artifacts and are intentionally not
 
 ## Claim discipline
 
-Release metadata must not imply that AAIO is comprehensive, representative of incident prevalence, endorsed by AIID/OECD/NIST/African Union, or evidence that countries missing from the dataset experience no AI harms.
+Release metadata must not imply that AAIO is comprehensive, representative of incident prevalence, endorsed by AIID/OECD/NIST/African Union, formally FAIR-certified, or evidence that countries missing from the dataset experience no AI harms.
