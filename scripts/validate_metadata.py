@@ -53,10 +53,22 @@ def main() -> int:
         if name in resource_names:
             errors.append(f"duplicate datapackage resource name: {name}")
         resource_names.add(name)
+        if resource.get("profile") != "tabular-data-resource":
+            errors.append(f"resource {name or '<unnamed>'} must use tabular-data-resource profile")
         if not path:
             errors.append(f"resource {name or '<unnamed>'} missing path")
         elif not (ROOT / path).exists():
             errors.append(f"resource path does not exist: {path}")
+        schema = resource.get("schema")
+        if schema:
+            schema_path = ROOT / str(schema)
+            if not schema_path.exists():
+                errors.append(f"resource schema path does not exist: {schema}")
+            else:
+                try:
+                    json.loads(schema_path.read_text(encoding="utf-8"))
+                except Exception as exc:
+                    errors.append(f"resource schema is not valid JSON: {schema}: {exc}")
 
     expected_resources = {
         "core-incidents",
@@ -70,6 +82,10 @@ def main() -> int:
             "datapackage missing expected resources: "
             + ", ".join(sorted(expected_resources - resource_names))
         )
+
+    core = next((r for r in resources if isinstance(r, dict) and r.get("name") == "core-incidents"), None)
+    if not core or core.get("schema") != "schema/core-table-schema.json":
+        errors.append("core-incidents must reference schema/core-table-schema.json")
 
     if jsonld.get("@context") != "https://schema.org":
         errors.append("JSON-LD @context must be https://schema.org")
