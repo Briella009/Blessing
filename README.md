@@ -5,15 +5,15 @@
 [![Live Dashboard](https://img.shields.io/badge/Live%20Dashboard-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://aaio-africa.streamlit.app/)
 [![Validate data](https://github.com/Briella009/Africa-AI-Incident-Observatory/actions/workflows/validate-data.yml/badge.svg)](https://github.com/Briella009/Africa-AI-Incident-Observatory/actions/workflows/validate-data.yml)
 ![Records](https://img.shields.io/badge/verified%20core%20records-19-0f766e)
-![Version](https://img.shields.io/badge/dataset-v0.2.1-516b78)
+![Version](https://img.shields.io/badge/dataset-v0.2.2-516b78)
 ![License](https://img.shields.io/badge/code-MIT-blue)
 ![Data](https://img.shields.io/badge/data-CC%20BY%204.0-green)
 
 **Dashboard:** https://aaio-africa.streamlit.app/
 
-**Current dataset:** v0.2.1 · 19 curated core records · 9 primary African countries · 3 multilingual source families · operational evidence provenance · AIID/OECD semantic interoperability
+**Current dataset:** v0.2.2 · 19 curated core records · 9 primary African countries · 3 multilingual source families · operational evidence provenance · AIID/OECD semantic interoperability · scheduled public-source resilience monitoring
 
-**Quick links:** [Explore data](data/incidents.csv) · [Dashboard](https://aaio-africa.streamlit.app/) · [Methodology](docs/methodology.md) · [Dataset card](docs/dataset-card.md) · [Data dictionary](docs/data-dictionary.md) · [Interoperability](docs/interoperability.md) · [Contribute](https://github.com/Briella009/Africa-AI-Incident-Observatory/issues/new?template=incident_submission.yml) · [Citation](CITATION.cff)
+**Quick links:** [Explore data](data/incidents.csv) · [Dashboard](https://aaio-africa.streamlit.app/) · [Methodology](docs/methodology.md) · [Dataset card](docs/dataset-card.md) · [Data dictionary](docs/data-dictionary.md) · [Interoperability](docs/interoperability.md) · [Source resilience](docs/source-resilience.md) · [Contribute](https://github.com/Briella009/Africa-AI-Incident-Observatory/issues/new?template=incident_submission.yml) · [Citation](CITATION.cff)
 
 ## Why this exists
 
@@ -36,19 +36,26 @@ The **Africa AI Incident Observatory (AAIO)** is an independent, open-data respo
 | **Interoperability does not fabricate equivalence** | Non-equivalent OECD/AIID fields remain partial, approximate or unmapped rather than receiving invented normalized values. |
 | **Material changes are auditable** | Core-record promotions and substantive corrections are tracked in an append-only history ledger. |
 | **Machine-readable research metadata** | Data Package metadata, a tabular schema, Schema.org JSON-LD and `CITATION.cff` make the dataset easier to inspect and reuse programmatically. |
+| **Public evidence links are monitored over time** | A weekly audit identifies broken, blocked or unstable evidence URLs without confusing temporary web failures with evidence invalidity. |
+
+## v0.2.2 — source resilience
+
+The **19 core incidents remain unchanged**. v0.2.2 strengthens the evidence infrastructure around them.
+
+AAIO now maintains a deduplicated inventory of public evidence URLs and can audit their practical reachability across the core, multilingual, operational and watchlist layers. The audit distinguishes `not_found` from access blocking, rate limiting, server failures and network errors. It is deliberately **not a release gate** because bot protection and temporary outages do not determine whether an incident is valid.
+
+A scheduled GitHub Actions workflow produces temporary JSON and Markdown reports, preserving the connection between each public URL and the AAIO records that rely on it. See [source resilience and link-health monitoring](docs/source-resilience.md).
 
 ## v0.2.1 — research-data readiness
 
-v0.2.1 is a non-breaking metadata and reproducibility release. The **19 core incidents remain unchanged** from v0.2.0; the improvement is in how AAIO can be discovered, understood, validated and reused.
-
-This release adds:
+v0.2.1 made AAIO easier to discover, understand, validate and reuse without changing the 19 core records established in v0.2.0. It added:
 
 - `datapackage.json` describing the core and evidence-layer resources;
 - `schema/core-table-schema.json` for typed, machine-readable structure of the core CSV;
 - `metadata/aaio-dataset.jsonld` using Schema.org `Dataset` metadata;
 - a comprehensive [dataset card](docs/dataset-card.md) covering motivation, composition, collection, intended uses, limitations, ethics and maintenance;
 - automated metadata validation in CI; and
-- a release-integrity fix so historical promotions keep the release in which they actually occurred instead of being rewritten by later patch versions.
+- version-aware release-integrity checks that preserve historical promotion provenance.
 
 These additions are **FAIR-oriented**, not a claim of formal FAIR certification. A persistent DOI-backed archive remains an external release step and will not be claimed before it exists.
 
@@ -60,8 +67,9 @@ The project also maintains:
 
 - a multilingual discovery layer covering **francophone, arabophone and lusophone** source families;
 - an operational evidence layer with promotion traceability;
-- a conservative watchlist for relevant cases that do not yet meet the AI-linkage threshold; and
-- an append-only history ledger for material record changes.
+- a conservative watchlist for relevant cases that do not yet meet the AI-linkage threshold;
+- an append-only history ledger for material record changes; and
+- a non-blocking source-resilience audit for public evidence links.
 
 The dataset is intentionally **not comprehensive or prevalence-weighted**. Missing records do not imply missing harm, and country counts must not be interpreted as national AI-safety rankings.
 
@@ -89,6 +97,8 @@ Core incident record
 Versioned release + history ledger
         ↓
 Interoperability export / upstream submission
+        ↓
+Ongoing public-source resilience monitoring
 ```
 
 Promotion into the core dataset requires a credible AI linkage, a realised event, a material African nexus, traceable public evidence and wording calibrated to what the evidence actually establishes.
@@ -120,6 +130,7 @@ Promotion into the core dataset requires a credible AI linkage, a realised event
 - `docs/multilingual-evidence.md` — multilingual discovery and translation-calibration protocol
 - `docs/operational-coverage.md` — operational expansion and negative-result discipline
 - `docs/interoperability.md` — AIID/OECD semantic mapping and non-equivalence safeguards
+- `docs/source-resilience.md` — public evidence link-health interpretation and maintenance protocol
 - `docs/release-policy.md` — versioning, corrections, provenance and DOI discipline
 - `docs/impact.md` — externally verifiable adoption, reuse and citation ledger
 - `docs/aiid-submission-packet.md` — prepared upstream submission notes for original AAIO operational cases
@@ -132,6 +143,7 @@ Promotion into the core dataset requires a credible AI linkage, a realised event
 - `scripts/validate_release.py` — version, citation, promotion and history consistency
 - `scripts/validate_metadata.py` — machine-readable metadata/resource consistency
 - `scripts/export_interoperability.py` — deterministic AIID/OECD semantic export
+- `scripts/check_source_health.py` — public evidence inventory and non-blocking link-health audit
 - `app.py` — interactive Streamlit explorer
 
 ## Inclusion rule
@@ -178,7 +190,7 @@ See [interoperability documentation](docs/interoperability.md).
 
 ## Reproducibility
 
-Run the full validation path locally:
+Run the full structural validation path locally:
 
 ```bash
 python -m venv .venv
@@ -193,10 +205,19 @@ pytest -q
 python scripts/export_interoperability.py \
   --output /tmp/aaio-interoperability-v1.json \
   --sha-output /tmp/aaio-interoperability-v1.sha256
+python scripts/check_source_health.py --inventory-only
 streamlit run app.py
 ```
 
-The interoperability export is deterministic for unchanged inputs and embeds source/mapping hashes. Passing CI verifies AAIO's declared structural and consistency controls; it does not certify external source permanence or remove legitimate interpretive uncertainty.
+A live source audit is intentionally separate because it depends on third-party web availability:
+
+```bash
+python scripts/check_source_health.py \
+  --output /tmp/aaio-source-health.json \
+  --markdown-output /tmp/aaio-source-health.md
+```
+
+Passing CI verifies AAIO's declared structural and consistency controls; it does not certify external source permanence or remove legitimate interpretive uncertainty.
 
 ## Explore the dashboard
 
@@ -241,4 +262,4 @@ Cybersecurity practitioner and AI researcher working across threat intelligence,
 
 ## Status
 
-**v0.2.1 research-data release.** The dataset evolves as sources are corrected, incidents are added, multilingual evidence is promoted or classifications are re-evaluated. Material core-record changes are recorded in `data/record_history.csv`; release-level changes are recorded in `CHANGELOG.md`.
+**v0.2.2 research-data release.** The dataset evolves as sources are corrected, incidents are added, multilingual evidence is promoted or classifications are re-evaluated. Material core-record changes are recorded in `data/record_history.csv`; release-level changes are recorded in `CHANGELOG.md`; public evidence links are monitored separately as operational maintenance metadata.
